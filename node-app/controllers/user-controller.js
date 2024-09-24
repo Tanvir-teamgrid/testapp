@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "jwt-token";
 class UserController {
     static addUser = async (req, res) => {
         try {
-            const { username, email, password, roleId, organizationId } = req.body;
+            const { username, email, password, roleId} = req.body;
 
             // Validate required fields
             if (!username || !email || !password || !roleId) {
@@ -30,10 +30,8 @@ class UserController {
                 email,
                 password,
                 roleId,
-                organizationId,
-                profilePhoto: req.file
-                    ? `${UPLOAD_URL}${req.file.filename}`
-                    : undefined,
+                
+                
             });
             await user.save();
             res.status(201).json({ message: "User created successfully", user });
@@ -86,7 +84,7 @@ class UserController {
                     username: user.username,
                     email: user.email,
                     role: roleName, // Passing the role name
-                    organizationId: user.organizationId,
+                    
                 },
                 JWT_SECRET,
                 { expiresIn: "30d" } // Token expiration set to 1 month (30 days)
