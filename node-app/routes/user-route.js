@@ -4,7 +4,7 @@ const authMiddleware = require("../middleware/authJwt");
 const router = express.Router();
 
  
-router.post("/users/add",authMiddleware("create"), UserController.addUser);
+router.post("/users/add", UserController.addUser);
 
  
 router.post("/users/login", UserController.loginUser);
