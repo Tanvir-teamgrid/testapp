@@ -164,7 +164,7 @@ class UserController {
             res.status(500).json({ error: "Server error", details: error.message });
         }
     };
-    static viewJobs = async (req, res) => {
+    static viewUsers = async (req, res) => {
         try {
           const user = await User.find(); // Fetch all jobs from the database
           res.status(200).json(user); // Send the jobs as a response

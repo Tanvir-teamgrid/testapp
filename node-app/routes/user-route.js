@@ -14,5 +14,7 @@ router.put("/users/:id",authMiddleware("update"), UserController.updateUser);
 
  
 router.delete("/users/:id",authMiddleware("delete"), UserController.deleteUser);
+
+router.get("/users",authMiddleware("viewall"), UserController.viewUsers);
  
 module.exports = router;
