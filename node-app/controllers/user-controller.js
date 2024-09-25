@@ -164,6 +164,15 @@ class UserController {
             res.status(500).json({ error: "Server error", details: error.message });
         }
     };
+    static viewJobs = async (req, res) => {
+        try {
+          const user = await User.find(); // Fetch all jobs from the database
+          res.status(200).json(user); // Send the jobs as a response
+        } catch (err) {
+          console.error("Error fetching jobs:", err);
+          res.status(500).json({ message: "Error fetching jobs", error: err.message });
+        }
+      };
 }
 
 module.exports = UserController;
