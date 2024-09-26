@@ -84,6 +84,49 @@ class JobController {
       res.status(500).json({ message: "Error fetching jobs", error: err.message });
     }
   };
+
+  // Update a job by ID
+  static updateJob = async (req, res) => {
+    const jobId = req.params.id; // Get the job ID from request parameters
+
+    try {
+      // Handle file upload if there's a new file
+      JobController.handleFileUpload(req, res, async () => {
+        const updateData = req.body;
+
+        if (req.file) {
+          updateData.companyLogo = `${upload_URL}${req.file.filename}`; // Update the logo URL if a new file is uploaded
+        }
+
+        const updatedJob = await Job.findByIdAndUpdate(jobId, updateData, { new: true }); // Update the job
+        if (!updatedJob) {
+          return res.status(404).json({ message: "Job not found" });
+        }
+
+        res.status(200).json({ message: "Job updated successfully", job: updatedJob });
+      });
+    } catch (err) {
+      console.error("Error updating job:", err);
+      res.status(500).json({ message: "Error updating job", error: err.message });
+    }
+  };
+
+  // Delete a job by ID
+  static deleteJob = async (req, res) => {
+    const jobId = req.params.id; // Get the job ID from request parameters
+
+    try {
+      const deletedJob = await Job.findByIdAndDelete(jobId); // Delete the job
+      if (!deletedJob) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      res.status(200).json({ message: "Job deleted successfully", job: deletedJob });
+    } catch (err) {
+      console.error("Error deleting job:", err);
+      res.status(500).json({ message: "Error deleting job", error: err.message });
+    }
+  };
 }
 
 module.exports = JobController;
