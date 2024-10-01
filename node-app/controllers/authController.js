@@ -3,41 +3,40 @@ const User = require('../models/user-model');
 const Organization = require('../models/organizationSchema');
 
 class authController {
-    static signUp = async (req,res) => {
+    static signUp = async (req, res) => {
         try {
-
-            const {name,email,password,phone} = req.body;
-            if (!name || !email || !password || !phone) {
+            const { username, email, password, phone } = req.body;
+    
+             
+            if (!username || !email || !password || !phone) {
                 return res.status(400).json({ message: "Missing required fields" });
             }
-            const existingUser = await User.findOne({email});
-            if(existingUser)
-            {
-                return res.status(200).json({message:"user  already exist"});
+    
+            
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(200).json({ message: "User already exists" });
             }
-
-            let role = await Role.find({name:'super_admin'})
-            if(!role)
-            {
-                role = new Role({
-                    name: 'super_admin'
-                })
+    
+       
+            let role = await Role.findOne({ name: 'super_admin' });  
+            if (!role) {
+            
+                role = new Role({ name: 'super_admin' });
                 await role.save();
             }
-
-            const user = new User({ name, email, password, phone, roleId: role._id });
+    
+            
+            const user = new User({ username, email, password, phone, roleId: role._id });
             const savedUser = await user.save();
-
+     
             res.status(201).json({ message: "User created successfully", user: savedUser });
-
-
-
-
+    
         } catch (error) {
             res.status(500).json({ message: "Error in sign up", error: error.message });
         }
-        
     }
+    
 
 
     static addOrganization = async (req,res) => {

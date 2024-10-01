@@ -83,7 +83,19 @@ class employeeController {
         } catch (error) {
             res.status(500).json({ message: "Error deleting employee", error: error.message });
         }
-    }
+    };
+    // static updateEmployee = async (req,res) => {
+    //     try {
+    //         const {id}=req.body;
+    //         const data = req.body;
+    //         const updatedData = await 
+            
+    //     } catch (error) {
+    //         res.status(500).json({message:" error updating ",error:error.message});
+            
+    //     }
+        
+    // }
 }
 
 module.exports = employeeController;
