@@ -13,6 +13,8 @@ const pagegroupRoute = require("./routes/pagegroupRoutes");
 const permissionRoute = require("./routes/permissionRoutes");
 const roleRoute = require("./routes/roleRoutes");
 const rolepermissionRoute = require("./routes/rolepermissionRoutes");
+const authRoute = require('./routes/authRoutes');
+const employeeRoute = require('./routes/employeeRoutes')
  
  
 const PORT = process.env.PORT || 8080;
@@ -30,6 +32,8 @@ app.use("/pagegroup",pagegroupRoute);
 app.use("/permission",permissionRoute);
 app.use("/rolepermission",rolepermissionRoute);
 app.use("/role",roleRoute);
+app.use("/auth",authRoute);
+app.use("/employee",employeeRoute);
  
 app.listen(PORT, () => {
   console.log(`server has started at port ${PORT}`);
