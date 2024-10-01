@@ -1,0 +1,15 @@
+const express = require('express');
+const employeeController = require('../controllers/employeeController');  
+const router = express.Router();
+
+ 
+router.post('/employees/add',authMiddleware("create"), employeeController.addEmployee);
+
+ 
+router.get('/employees/view/:id',authMiddleware("view"), employeeController.viewEmployee);
+
+ 
+router.get('/employees/viewall/',authMiddleware("viewall"), employeeController.viewAllEmployees);
+router.delete('/employees/delte/:id',authMiddleware("delete"), employeeController.viewAllEmployees);
+
+module.exports = router;
