@@ -5,7 +5,7 @@ const BASE_URL = "http://localhost:8080/";
 const upload_URL = `${BASE_URL}images/`;
 
 class JobController {
-  // Handle file upload
+   
   static handleFileUpload = (req, res, next) => {
     upload.single("companyLogo")(req, res, (err) => {
       if (err) {
@@ -16,7 +16,7 @@ class JobController {
     });
   };
 
-  // Post a new job
+   
   static postJob = async (req, res) => {
     try {
       // Handle file upload first
