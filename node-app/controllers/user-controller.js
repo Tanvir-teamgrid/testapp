@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "jwt-token";
 class UserController {
     static addUser = async (req, res) => {
         try {
-            const { username, email, password, roleId} = req.body;
+            const { username, email, password, roleId,organizationId} = req.body;
 
             // Validate required fields
             if (!username || !email || !password || !roleId) {
@@ -30,6 +30,7 @@ class UserController {
                 email,
                 password,
                 roleId,
+                organizationId,
                 
                 
             });
