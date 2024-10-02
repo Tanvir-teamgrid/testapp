@@ -7,39 +7,39 @@ const JWT_SECRET = process.env.JWT_SECRET || "jwt-token";
 
 
 class UserController {
-    static addUser = async (req, res) => {
-        try {
-            const { username, email, password, roleId,organizationId} = req.body;
+    // static addUser = async (req, res) => {
+    //     try {
+    //         const { username, email, password, roleId,organizationId} = req.body;
 
-            // Validate required fields
-            if (!username || !email || !password || !roleId) {
-                return res.status(400).json({ error: "All fields are required" });
-            }
+    //         // Validate required fields
+    //         if (!username || !email || !password || !roleId) {
+    //             return res.status(400).json({ error: "All fields are required" });
+    //         }
 
-            // Check if user already exists
-            const existingUser = await User.findOne({ email });
-            if (existingUser) {
-                return res
-                    .status(400)
-                    .json({ error: "User already exists with this email" });
-            }
+    //         // Check if user already exists
+    //         const existingUser = await User.findOne({ email });
+    //         if (existingUser) {
+    //             return res
+    //                 .status(400)
+    //                 .json({ error: "User already exists with this email" });
+    //         }
 
-            // Create a new user object
-            const user = new User({
-                username,
-                email,
-                password,
-                roleId,
-                organizationId,
+    //         // Create a new user object
+    //         const user = new User({
+    //             username,
+    //             email,
+    //             password,
+    //             roleId,
+    //             organizationId,
                 
                 
-            });
-            await user.save();
-            res.status(201).json({ message: "User created successfully", user });
-        } catch (error) {
-            res.status(500).json({ error: "Server error", details: error.message });
-        }
-    };
+    //         });
+    //         await user.save();
+    //         res.status(201).json({ message: "User created successfully", user });
+    //     } catch (error) {
+    //         res.status(500).json({ error: "Server error", details: error.message });
+    //     }
+    // };
 
 
 

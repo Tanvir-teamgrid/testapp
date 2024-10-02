@@ -14,7 +14,7 @@ class employeeController {
             if (existingUser) {
                 return res.status(400).json({ message: "User already exists" });
             }
-            const hashedPassword = await bcrypt.hash('employee@123', 10);
+            const hashedPassword = await bcrypt.hash('employee@123', 10);// default password added
             const user = new User({
                 email, phone, username, password: hashedPassword, roleId
             });
