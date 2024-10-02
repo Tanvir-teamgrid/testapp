@@ -56,7 +56,9 @@ class authController {
         try {
             authController.handleFileUpload(req,res,async () => {
                 const  { userId, name, logo, email, addressLine, phone, city, state, country, zipCode } = req.body;
-                if (!name || !logo || !email || !addressLine || !phone || !city || !state || !country || !zipCode) {
+                if (!name || !email || !addressLine || !phone || !city || !state || !country || !zipCode) {
+                    console.log(userId, name, logo, email, addressLine, phone, city, state, country, zipCode );
+                    
                     return res.status(400).json({ message: "Missing required fields" });
                 }
                 const user = await User.findById(userId);
