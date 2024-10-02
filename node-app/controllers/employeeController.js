@@ -31,7 +31,7 @@ class employeeController {
 
     static viewEmployee = async (req, res) => {
         try {
-            const userId = req.params.id; // Assuming you are passing the user ID in the URL
+            const userId = req.params.id;  
             const user = await User.findById(userId);
             if (!user) {
                 return res.status(404).json({ message: "Employee not found" });
@@ -45,7 +45,7 @@ class employeeController {
 
     static viewAllEmployees = async (req, res) => {
         try {
-            const users = await User.find().populate('roleId', 'roleName'); // Optionally populate role details
+            const users = await User.find().populate('roleId', 'roleName');  
             const userProfiles = await UserProfile.find();
     
             // Combine users with their profiles

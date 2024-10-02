@@ -19,7 +19,7 @@ class JobController {
    
   static postJob = async (req, res) => {
     try {
-      // Handle file upload first
+       
       JobController.handleFileUpload(req, res, async () => {
         const {
           title,
@@ -74,11 +74,11 @@ class JobController {
     }
   };
 
-  // View all jobs
+   
   static viewJobs = async (req, res) => {
     try {
-      const jobs = await Job.find(); // Fetch all jobs from the database
-      res.status(200).json(jobs); // Send the jobs as a response
+      const jobs = await Job.find();  
+      res.status(200).json(jobs);  
     } catch (err) {
       console.error("Error fetching jobs:", err);
       res.status(500).json({ message: "Error fetching jobs", error: err.message });
@@ -87,18 +87,18 @@ class JobController {
 
   // Update a job by ID
   static updateJob = async (req, res) => {
-    const jobId = req.params.id; // Get the job ID from request parameters
+    const jobId = req.params.id;  
 
     try {
-      // Handle file upload if there's a new file
+       
       JobController.handleFileUpload(req, res, async () => {
         const updateData = req.body;
 
         if (req.file) {
-          updateData.companyLogo = `${upload_URL}${req.file.filename}`; // Update the logo URL if a new file is uploaded
+          updateData.companyLogo = `${upload_URL}${req.file.filename}`;  
         }
 
-        const updatedJob = await Job.findByIdAndUpdate(jobId, updateData, { new: true }); // Update the job
+        const updatedJob = await Job.findByIdAndUpdate(jobId, updateData, { new: true });  
         if (!updatedJob) {
           return res.status(404).json({ message: "Job not found" });
         }
@@ -111,12 +111,11 @@ class JobController {
     }
   };
 
-  // Delete a job by ID
+  
   static deleteJob = async (req, res) => {
-    const jobId = req.params.id; // Get the job ID from request parameters
-
+    const jobId = req.params.id;  
     try {
-      const deletedJob = await Job.findByIdAndDelete(jobId); // Delete the job
+      const deletedJob = await Job.findByIdAndDelete(jobId);  
       if (!deletedJob) {
         return res.status(404).json({ message: "Job not found" });
       }
