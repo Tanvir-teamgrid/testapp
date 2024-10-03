@@ -5,12 +5,11 @@ const roleSchema = new Schema(
   {
     name: {
       type: String,
-      enum: ["super_admin", "admin", "hr", "employee"],
+      enum: ["super_admin", "admin", "hr", "employee", "HR_Manager"],
       required: true,
       unique: true,
       trim: true,
     },
-   
   },
   {
     timestamps: true,
