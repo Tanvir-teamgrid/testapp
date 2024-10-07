@@ -1,49 +1,49 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const organizationSchema = new mongoose.Schema({
-    name : {
-        type:String,
-        required :true
+const organizationSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
- logo:{
-    type: String,
-     
+    logo: {
+      type: String, // URL for the organization logo
+    },
+    email: {
+      type: String,
+      required: true,
+    },
+    addressLine: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    city: {
+      type: String,
+      required: true,
+    },
+    state: {
+      type: String,
+      required: true,
+    },
+    country: {
+      type: String,
+      required: true,
+    },
+    zipCode: {
+      type: String,
+      required: true,
+    },
+    superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "users", // The user who created the organization, aka the super admin
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
 
- },
- email:{
-    type: String,
-    required: true
-
- },
- addressLine:{
-    type:String,
-     
-
- },
- phone:{
-    type:String,
-    required:true
-
- },
- 
-city:{
-    type:String,
-    
-
-},
-state:{
-    type:String,
-  
-},
-country:{
-    type:String,
-     
-},
-zipCode:{
-    type:String,
-   
-}
-});
-organization = mongoose.model('organizations',organizationSchema);
-
-module.exports= organization
+module.exports = mongoose.model("organizations", organizationSchema);

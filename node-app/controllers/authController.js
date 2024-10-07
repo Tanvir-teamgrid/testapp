@@ -1,94 +1,71 @@
-const Role = require("../models/role");
-const User = require("../models/user-model");
 const Organization = require("../models/organizationSchema");
-const upload = require("../middleware/fileUploads");
+const User = require("../models/user-model");
+const Role = require("../models/role");
+const handleFileUpload = require("../middleware/logoUpload");
 
-const BASE_URL = "http://localhost:8080/";
-const upload_URL = `${BASE_URL}images/`;
-
-class authController {
-  static handleFileUpload = (req, res, next) => {
-    upload.single("logo")(req, res, (err) => {
-      if (err) {
-        console.error("Error uploading file:", err);
-        return res.status(400).json({ message: "error uploading file" });
-      }
-      next();
-    });
-  };
-  static signUp = async (req, res) => {
+class AuthController {
+  // Sign-up logic for the first user (organization creator)
+  static signUpAndCreateOrganization = async (req, res) => {
+    console.log("Received request:", req.body);
     try {
-      const { username, email, password, phone } = req.body;
+      const {
+        username,
+        email,
+        password,
+        phone,
+        orgName,
+        addressLine,
+        city,
+        state,
+        country,
+        zipCode,
+      } = req.body;
 
-      if (!username || !email || !password || !phone) {
+      // Validate required fields
+      if (
+        !username ||
+        !email ||
+        !password ||
+        !phone ||
+        !orgName ||
+        !addressLine ||
+        !city ||
+        !state ||
+        !country ||
+        !zipCode
+      ) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
+      // Check if user with the email already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        return res.status(200).json({ message: "User already exists" });
+        return res.status(400).json({ message: "User already exists" });
       }
 
+      // Find or create the "super_admin" role
       let role = await Role.findOne({ name: "super_admin" });
       if (!role) {
         role = new Role({ name: "super_admin" });
         await role.save();
       }
 
+      // Create the user who is also the admin of the organization
       const user = new User({
         username,
         email,
         password,
         phone,
-        roleId: role._id,
+        roleId: role._id, // Assign super admin role
       });
+
       const savedUser = await user.save();
 
-      res
-        .status(201)
-        .json({ message: "User created successfully", user: savedUser });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error in sign up", error: error.message });
-    }
-  };
-
-  static addOrganization = async (req, res) => {
-    try {
-      authController.handleFileUpload(req, res, async () => {
-        const {
-          userId,
-          name,
-          logo,
-          email,
-          addressLine,
-          phone,
-          city,
-          state,
-          country,
-          zipCode,
-        } = req.body;
-        if (
-          !name ||
-          !email ||
-          !addressLine ||
-          !phone ||
-          !city ||
-          !state ||
-          !country ||
-          !zipCode
-        ) {
-          return res.status(400).json({ message: "Missing required fields" });
-        }
-        const user = await User.findById(userId);
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
+      // Handle organization logo upload
+      handleFileUpload("logo")(req, res, async () => {
         const organization = new Organization({
-          name,
-          logo: req.file ? `${upload_URL}${req.file.filename}` : undefined,
+          name: orgName,
+          logo: req.file ? `${upload_URL}${req.file.filename}` : undefined, // Logo URL if uploaded
           email,
           addressLine,
           phone,
@@ -96,51 +73,27 @@ class authController {
           state,
           country,
           zipCode,
+          superAdminId: savedUser._id, // Assign this user as the super admin of the org
         });
-        try {
-          const savedOrganization = await organization.save();
-          user.organizationId = savedOrganization._id;
-          await user.save();
-          res.status(200).json({
-            message: "organization setup successfully",
-            organization: savedOrganization,
-            user: user,
-          });
-        } catch (error) {
-          res.status(500).json({ message: "error saving organization" });
-        }
-      });
-    } catch (error) {
-      res
-        .status(200)
-        .json({ message: "Error creating Organization", error: error.message });
-    }
-  };
 
-  static updateOrganization = async (req, res) => {
-    const { id } = req.params.id;
-    try {
-      authController.handleFileUpload(req, res, async () => {
-        const updateData = req.body;
-        if (req.file) {
-          updateData.logo = `${upload_URL}${req.file.filename}`;
-        }
-        const updatedData = await Organization.findByIdAndUpadte(
-          id,
-          updateData,
-          { new: true }
-        );
-        if (!updatedData) {
-          return res.status(404).json({ message: "organization not found" });
-        }
-        res.status(201).json({ message: "updated successfully" });
+        const savedOrganization = await organization.save();
+
+        // Update user with organizationId
+        savedUser.organizationId = savedOrganization._id;
+        await savedUser.save();
+
+        res.status(201).json({
+          message: "User and Organization created successfully",
+          user: savedUser,
+          organization: savedOrganization,
+        });
       });
     } catch (error) {
       res
         .status(500)
-        .json({ message: "error updating organization", error: error.message });
+        .json({ message: "Error in sign-up", error: error.message });
     }
   };
 }
 
-module.exports = authController;
+module.exports = AuthController;

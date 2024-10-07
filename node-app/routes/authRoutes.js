@@ -1,10 +1,11 @@
-const express = require('express');
-const { signUp, addOrganization }=require('../controllers/authController');
-// const authMiddleware = require('../middleware/authJwt');
+const express = require("express");
+const AuthController = require("../controllers/authController");
 const router = express.Router();
 
-router.post('/add',signUp);
-router.post('/addOrganization',addOrganization);
-// router.post('/addOrganization',authMiddleware("create"),addOrganization);
+// Route for user signup and organization creation
+router.post("/signup", AuthController.signUpAndCreateOrganization);
 
-module.exports=router;
+// // Route for user login
+// router.post("/login", AuthController.login);
+
+module.exports = router;

@@ -1,90 +1,120 @@
-const UserProfile = require("../models/userProfile"); // Import the UserProfile model
-const User = require("../models/user-model"); // Import the User model
+const UserProfile = require("../models/userProfile");
+const Employee = require("../models/employeeSchema");
 
 class UserProfileController {
   // Create a new user profile
-  static createUserProfile = async (req, res) => {
+  static createProfile = async (req, res) => {
     try {
-      const { userId, firstName, lastName, dob, contactNumber } = req.body;
+      const { employeeId, address, dob, gender, maritalStatus } = req.body;
+      const image = req.file ? req.file.path : null; // Get image path from multer
 
-      // Validate required fields
-      if (!userId || !firstName || !lastName || !dob || !contactNumber) {
-        return res.status(400).json({ error: "All fields are required" });
+      // Check if the employee exists
+      const employee = await Employee.findById(employeeId);
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
       }
 
-      // Check if user exists
-      const userExists = await User.findById(userId);
-      if (!userExists) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Create and save the user profile
-      const userProfile = new UserProfile({
-        userId,
-        firstName,
-        lastName,
+      // Create a new profile
+      const profile = new UserProfile({
+        employeeId,
+        address,
         dob,
-        contactNumber,
+        gender,
+        maritalStatus,
+        image, // Image URL
       });
-      const savedProfile = await userProfile.save();
 
-      res
-        .status(201)
-        .json({
-          message: "User profile created successfully",
-          profile: savedProfile,
-        });
+      const savedProfile = await profile.save();
+
+      res.status(201).json({
+        message: "Profile created successfully",
+        profile: savedProfile,
+      });
     } catch (error) {
-      res.status(500).json({ error: "Server error", details: error.message });
+      console.error("Error creating profile:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   };
 
-  // Get user profile by ID
-  static getUserProfileById = async (req, res) => {
-    const { id } = req.params;
+  // Get user profile by userId
+  static viewProfile = async (req, res) => {
     try {
-      const profile = await UserProfile.findById(id);
+      const { employeeId } = req.params; // The employee ID is passed in the URL
+
+      // Find the profile by employeeId, populating the employee details
+      const profile = await UserProfile.findOne({ employeeId }).populate(
+        "employeeId"
+      );
+
       if (!profile) {
-        return res.status(404).json({ error: "User profile not found" });
+        return res.status(404).json({ message: "Profile not found" });
       }
-      res.status(200).json(profile);
+
+      // Modify the image URL directly in the profile object
+      if (profile.image) {
+        profile.image = `${req.protocol}://${req.get("host")}/${profile.image}`; // Constructing full image URL
+      }
+
+      // Send profile details, including the image URL
+      res.status(200).json({
+        message: "Profile retrieved successfully",
+        profile,
+      });
     } catch (error) {
-      res.status(500).json({ error: "Server error", details: error.message });
+      console.error("Error viewing profile:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   };
 
   // Update user profile by ID
-  static updateUserProfile = async (req, res) => {
-    const { id } = req.params;
+  static editProfile = async (req, res) => {
     try {
-      const updatedProfile = await UserProfile.findByIdAndUpdate(id, req.body, {
-        new: true,
-      });
-      if (!updatedProfile) {
-        return res.status(404).json({ error: "User profile not found" });
+      const { employeeId } = req.params; // Employee ID from the URL
+      const { address, dob, gender, maritalStatus, image } = req.body;
+
+      // Find the profile by employeeId
+      const profile = await UserProfile.findOne({ employeeId });
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
-      res
-        .status(200)
-        .json({
-          message: "User profile updated successfully",
-          profile: updatedProfile,
-        });
+
+      // Update the profile fields
+      profile.address = address || profile.address;
+      profile.dob = dob || profile.dob;
+      profile.gender = gender || profile.gender;
+      profile.maritalStatus = maritalStatus || profile.maritalStatus;
+      profile.image = image || profile.image; // Update image if provided
+
+      const updatedProfile = await profile.save();
+
+      res.status(200).json({
+        message: "Profile updated successfully",
+        profile: updatedProfile,
+      });
     } catch (error) {
-      res.status(500).json({ error: "Server error", details: error.message });
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   };
-
   // Delete user profile by ID
-  static deleteUserProfile = async (req, res) => {
-    const { id } = req.params;
+  static deleteProfile = async (req, res) => {
     try {
-      const deletedProfile = await UserProfile.findByIdAndDelete(id);
-      if (!deletedProfile) {
-        return res.status(404).json({ error: "User profile not found" });
+      const { employeeId } = req.params; // Employee ID from the URL
+
+      // Find and delete the profile by employeeId
+      const profile = await UserProfile.findOneAndDelete({ employeeId });
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
       }
-      res.status(200).json({ message: "User profile deleted successfully" });
+
+      res.status(200).json({
+        message: "Profile deleted successfully",
+      });
     } catch (error) {
-      res.status(500).json({ error: "Server error", details: error.message });
+      console.error("Error deleting profile:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   };
 }
