@@ -3,7 +3,6 @@ const User = require("../models/user-model");
 const Organization = require("../models/organizationSchema");
 
 class EmployeeController {
-  // Create a new employee
   static createEmployee = async (req, res) => {
     try {
       const { department, position, salary, hireDate, status } = req.body;
@@ -14,8 +13,10 @@ class EmployeeController {
       }
 
       // Verify that the user creating the employee belongs to an organization
-      const adminUser = await User.findById(req.user._id); // Assumes req.user is set via auth middleware
-      if (!adminUser.organizationId) {
+      const adminUser = await User.findById(req.user.id); // Ensure you are using req.user.id
+
+      // Check if adminUser is found and has an organizationId
+      if (!adminUser || !adminUser.organizationId) {
         return res
           .status(403)
           .json({ message: "Not authorized to create employees" });
@@ -31,7 +32,8 @@ class EmployeeController {
 
       // Create the employee
       const employee = new Employee({
-        userId: req.user._id,
+        userId: req.user.id,
+        organizationId: adminUser.organizationId, // Set the organizationId
         department,
         position,
         salary,
@@ -48,6 +50,53 @@ class EmployeeController {
       });
     } catch (error) {
       console.error("Error creating employee:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  static getAllEmployees = async (req, res) => {
+    try {
+      // Retrieve the admin user and populate their organization
+      const adminUser = await User.findById(req.user.id).populate(
+        "organizationId"
+      );
+
+      if (!adminUser || !adminUser.organizationId) {
+        return res
+          .status(403)
+          .json({ message: "Not authorized to view employees" });
+      }
+
+      // Retrieve employees linked to the admin's organization
+      const employees = await Employee.find({
+        organizationId: adminUser.organizationId._id, // Make sure to add organizationId in Employee schema
+      })
+        .populate({
+          path: "userId", // Populate user details
+          select: "firstName lastName email phone",
+        })
+        .populate({
+          path: "createdBy", // Populate creator details
+          select: "firstName lastName",
+        })
+        .exec();
+
+      if (employees.length === 0) {
+        return res.status(200).json({
+          message: "No employees found in this organization",
+          employees: [],
+        });
+      }
+
+      res.status(200).json({
+        message:
+          employees.length === 1
+            ? "1 employee fetched successfully"
+            : "Employees fetched successfully",
+        employees,
+      });
+    } catch (error) {
+      console.error("Error fetching employees:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -121,26 +170,6 @@ class EmployeeController {
       });
     } catch (error) {
       console.error("Error deleting employee:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  };
-
-  // Get all employees for the organization
-  static getAllEmployees = async (req, res) => {
-    try {
-      const adminUser = await User.findById(req.user._id);
-      const employees = await Employee.find({
-        organizationId: adminUser.organizationId,
-      })
-        .populate("userId", "firstName lastName email phone")
-        .exec();
-
-      res.status(200).json({
-        message: "Employees fetched successfully",
-        employees,
-      });
-    } catch (error) {
-      console.error("Error fetching employees:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   };

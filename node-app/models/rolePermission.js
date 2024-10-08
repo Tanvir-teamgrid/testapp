@@ -7,11 +7,13 @@ const rolePermissionSchema = new mongoose.Schema(
       ref: "roles",
       required: true,
     },
-    permissionId: [{
-      type : mongoose.Schema.Types.ObjectId,
-      ref : "permission",
-      required :true,
-    }]
+    permissionId: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "permissions",
+        required: true,
+      },
+    ],
   },
   { timestamps: true }
 );

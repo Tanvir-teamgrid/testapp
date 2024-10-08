@@ -7,6 +7,12 @@ const employeeSchema = new mongoose.Schema(
       ref: "users", // Reference to the User schema
       required: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "organizations",
+      required: true,
+    },
+
     department: {
       type: String,
       required: true,
