@@ -18,19 +18,8 @@ class employeeController {
         contactNumber,
         password,
       } = req.body;
-      console.log( username,
-        email,
-        phone,
-        roleId,
-        firstName,
-        lastName,
-        dob,
-        contactNumber,
-        password,);
       
-
-      // Check for missing required fields
-      if (
+       if (
         !username ||
         !email ||
         !phone ||
@@ -42,13 +31,13 @@ class employeeController {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Check if the user already exists
+       
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
-      // Check if the role exists
+       
       const role = await Role.findById(roleId);
       if (!role) {
         return res.status(400).json({ message: "Invalid role" });
@@ -61,7 +50,7 @@ class employeeController {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
 
-      // Create and save the new user
+       
       const newUser = new User({
         email,
         phone,
@@ -71,7 +60,7 @@ class employeeController {
       });
       const savedUser = await newUser.save();
 
-      // Create and save the user profile
+       
       const newUserProfile = new UserProfile({
         firstName,
         lastName,
@@ -81,7 +70,7 @@ class employeeController {
       });
       await newUserProfile.save();
 
-      // Respond with success
+      
       return res.status(201).json({
         message: "Employee created successfully",
         user: savedUser,
@@ -94,9 +83,9 @@ class employeeController {
     }
   };
 
-  // Call the login function from the userController when needed
+   
   static loginEmployee = async (req, res) => {
-    return userController.loginUser(req, res); // Reuse login logic from userController
+    return userController.loginUser(req, res);  
   };
 
   static viewEmployee = async (req, res) => {
@@ -120,7 +109,7 @@ class employeeController {
       const users = await User.find().populate("roleId", "roleName");
       const userProfiles = await UserProfile.find();
 
-      // Combine users with their profiles
+      
       const allEmployees = users.map((user) => {
         const profile = userProfiles.find(
           (profile) => profile.userId.toString() === user._id.toString()
