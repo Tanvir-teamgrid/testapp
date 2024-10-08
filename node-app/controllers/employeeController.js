@@ -18,6 +18,16 @@ class employeeController {
         contactNumber,
         password,
       } = req.body;
+      console.log( username,
+        email,
+        phone,
+        roleId,
+        firstName,
+        lastName,
+        dob,
+        contactNumber,
+        password,);
+      
 
       // Check for missing required fields
       if (
@@ -26,8 +36,8 @@ class employeeController {
         !phone ||
         !roleId ||
         !firstName ||
-        !lastName ||
-        !password
+        !lastName 
+        
       ) {
         return res.status(400).json({ message: "Missing required fields" });
       }
