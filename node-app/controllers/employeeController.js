@@ -1,21 +1,37 @@
+const User = require("../models/user-model"); // Adjust path as needed
 const Employee = require("../models/employeeSchema");
-const User = require("../models/user-model");
 const Organization = require("../models/organizationSchema");
 
 class EmployeeController {
+  // Create employee
   static createEmployee = async (req, res) => {
     try {
-      const { department, position, salary, hireDate, status } = req.body;
+      const {
+        username,
+        email,
+        password,
+        department,
+        position,
+        salary,
+        hireDate,
+        status,
+      } = req.body;
 
-      // Validate request
-      if (!department || !position || !salary || !hireDate) {
+      // Validate required fields
+      if (
+        !username ||
+        !email ||
+        !password ||
+        !department ||
+        !position ||
+        !salary ||
+        !hireDate
+      ) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Verify that the user creating the employee belongs to an organization
-      const adminUser = await User.findById(req.user.id); // Ensure you are using req.user.id
-
-      // Check if adminUser is found and has an organizationId
+      // Verify if the user creating the employee belongs to an organization
+      const adminUser = await User.findById(req.user.id);
       if (!adminUser || !adminUser.organizationId) {
         return res
           .status(403)
@@ -30,23 +46,34 @@ class EmployeeController {
         return res.status(404).json({ message: "Organization not found" });
       }
 
-      // Create the employee
+      // Create the new user for the employee
+      const newUser = new User({
+        username,
+        email,
+        password, // You should hash the password before saving it
+        organizationId: adminUser.organizationId,
+      });
+
+      const savedUser = await newUser.save();
+
+      // Create the employee profile
       const employee = new Employee({
-        userId: req.user.id,
-        organizationId: adminUser.organizationId, // Set the organizationId
+        userId: savedUser._id,
+        organizationId: adminUser.organizationId,
         department,
         position,
         salary,
         hireDate,
-        status: status || "active", // Default to 'active' if status is not provided
+        status: status || "active",
         createdBy: adminUser._id,
       });
 
       const savedEmployee = await employee.save();
 
       res.status(201).json({
-        message: "Employee created successfully",
+        message: "Employee and user created successfully",
         employee: savedEmployee,
+        user: savedUser,
       });
     } catch (error) {
       console.error("Error creating employee:", error);
@@ -54,89 +81,88 @@ class EmployeeController {
     }
   };
 
-  static getAllEmployees = async (req, res) => {
+  // View own profile
+  static viewMyProfile = async (req, res) => {
     try {
-      // Retrieve the admin user and populate their organization
-      const adminUser = await User.findById(req.user.id).populate(
-        "organizationId"
+      const employeeId = req.user.id;
+
+      const employee = await Employee.findOne({ userId: employeeId }).populate(
+        "userId"
       );
-
-      if (!adminUser || !adminUser.organizationId) {
-        return res
-          .status(403)
-          .json({ message: "Not authorized to view employees" });
-      }
-
-      // Retrieve employees linked to the admin's organization
-      const employees = await Employee.find({
-        organizationId: adminUser.organizationId._id, // Make sure to add organizationId in Employee schema
-      })
-        .populate({
-          path: "userId", // Populate user details
-          select: "firstName lastName email phone",
-        })
-        .populate({
-          path: "createdBy", // Populate creator details
-          select: "firstName lastName",
-        })
-        .exec();
-
-      if (employees.length === 0) {
-        return res.status(200).json({
-          message: "No employees found in this organization",
-          employees: [],
-        });
+      if (!employee) {
+        return res.status(404).json({ message: "Employee profile not found" });
       }
 
       res.status(200).json({
-        message:
-          employees.length === 1
-            ? "1 employee fetched successfully"
-            : "Employees fetched successfully",
+        message: "Employee profile retrieved successfully",
+        profile: {
+          username: employee.userId.username,
+          email: employee.userId.email,
+          profileImage: employee.userId.profileImage,
+          department: employee.department,
+          position: employee.position,
+          salary: employee.salary,
+          hireDate: employee.hireDate,
+          status: employee.status,
+        },
+      });
+    } catch (error) {
+      console.error("Error retrieving employee profile:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+  // Get list of employees
+  static listEmployees = async (req, res) => {
+    try {
+      const adminUser = await User.findById(req.user.id);
+      const employees = await Employee.find({
+        organizationId: adminUser.organizationId,
+      }).populate("userId");
+
+      res.status(200).json({
+        message: "Employees retrieved successfully",
         employees,
       });
     } catch (error) {
-      console.error("Error fetching employees:", error);
+      console.error("Error retrieving employees:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   };
-
-  // Get an employee profile by their ID
-  static getEmployeeProfile = async (req, res) => {
-    try {
-      const { employeeId } = req.params;
-
-      const employee = await Employee.findById(employeeId)
-        .populate("userId", "firstName lastName email phone") // Populate user details
-        .populate("createdBy", "firstName lastName") // Populate creator details
-        .exec();
-
-      if (!employee) {
-        return res.status(404).json({ message: "Employee not found" });
-      }
-
-      res.status(200).json({
-        message: "Employee profile fetched successfully",
-        employee,
-      });
-    } catch (error) {
-      console.error("Error fetching employee profile:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  };
-
-  // Update an employee profile by ID
+  // Update employee
   static updateEmployee = async (req, res) => {
     try {
-      const { employeeId } = req.params;
-      const { department, position, salary, hireDate, status } = req.body;
+      const employeeId = req.params.id; // Employee ID from the request parameters
+      const {
+        username,
+        email,
+        department,
+        position,
+        salary,
+        hireDate,
+        status,
+      } = req.body;
 
-      const employee = await Employee.findById(employeeId);
+      // Find the employee
+      const employee = await Employee.findById(employeeId).populate("userId");
+
       if (!employee) {
         return res.status(404).json({ message: "Employee not found" });
       }
 
-      // Update the fields
+      // Verify if the user updating the employee belongs to the same organization
+      const adminUser = await User.findById(req.user.id);
+      if (
+        !adminUser ||
+        adminUser.organizationId.toString() !==
+          employee.organizationId.toString()
+      ) {
+        return res
+          .status(403)
+          .json({ message: "Not authorized to update this employee" });
+      }
+
+      // Update employee details
       employee.department = department || employee.department;
       employee.position = position || employee.position;
       employee.salary = salary || employee.salary;
@@ -155,15 +181,32 @@ class EmployeeController {
     }
   };
 
-  // Delete an employee by ID
+  // Delete employee
   static deleteEmployee = async (req, res) => {
     try {
-      const { employeeId } = req.params;
+      const employeeId = req.params.id; // Employee ID from the request parameters
 
-      const employee = await Employee.findByIdAndDelete(employeeId);
+      // Find the employee
+      const employee = await Employee.findById(employeeId).populate("userId");
       if (!employee) {
         return res.status(404).json({ message: "Employee not found" });
       }
+
+      // Verify if the user deleting the employee belongs to the same organization
+      const adminUser = await User.findById(req.user.id);
+      if (
+        !adminUser ||
+        adminUser.organizationId.toString() !==
+          employee.organizationId.toString()
+      ) {
+        return res
+          .status(403)
+          .json({ message: "Not authorized to delete this employee" });
+      }
+
+      // Delete the employee
+      await Employee.deleteOne({ _id: employeeId });
+      await User.deleteOne({ _id: employee.userId._id }); // Optionally delete the associated user
 
       res.status(200).json({
         message: "Employee deleted successfully",
