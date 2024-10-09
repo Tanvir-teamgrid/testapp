@@ -151,7 +151,7 @@ class authController {
       if (!data) {
         return res.status(404).json({message:"organization not found"});
       }
-      res.status(200).json({message:"organization retrive successfully"});
+      res.status(200).json({message:"organization retrive successfully",info:data});
     } catch (error) {
       res.status(500).json({message:"error creating organization ",error:error.message});
     }
