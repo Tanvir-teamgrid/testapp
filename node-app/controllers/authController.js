@@ -156,7 +156,27 @@ class authController {
       res.status(500).json({message:"error creating organization ",error:error.message});
     }
     
-  }
+  };
+  static getOrganizationByUserId = async (req, res) => {
+    try {
+      const { userId } = req.params; // Expecting userId to be passed as a URL parameter
+  
+      // Find the organization that contains the userId in its users array
+      const organization = await Organization.findOne({ users: userId });
+      
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found for the specified user." });
+      }
+  
+      return res.status(200).json({
+        message: "Organization retrieved successfully",
+        organization,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Error retrieving organization", error: error.message });
+    }
+  };
+  
 }
 
 module.exports = authController;
