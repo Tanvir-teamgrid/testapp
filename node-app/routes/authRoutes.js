@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post('/add',signUp);
 router.post('/addOrganization',addOrganization);
-router.get('/addOrganization/',viewOrganization);
+router.get('/addOrganization/view',viewOrganization);
 // router.post('/addOrganization',authMiddleware("create"),addOrganization);
 
 module.exports=router;
