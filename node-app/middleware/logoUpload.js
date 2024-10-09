@@ -1,5 +1,4 @@
-// middleware/fileUpload.js
-const upload = require("../middleware/fileUploads"); // Adjust the path as needed
+const upload = require("./fileUploads");
 
 const handleFileUpload = (fieldName) => {
   return (req, res, next) => {
@@ -11,13 +10,14 @@ const handleFileUpload = (fieldName) => {
           .json({ message: "File upload failed", error: err.message });
       }
 
-      // If a file is not required, you can check for its presence
+      // Optional check: if a file is required but not uploaded
       if (!req.file && req.body[fieldName]) {
         return res
           .status(400)
           .json({ message: `File upload for '${fieldName}' is required` });
       }
 
+      // Continue to the next middleware if everything is fine
       next();
     });
   };

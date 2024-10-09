@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -18,9 +19,12 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
     },
+    profileImage: {
+      type: String, // URL or path to the user's profile image
+    },
     roleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "roles", // Reference to Role schema (e.g. super_admin, employee)
+      ref: "roles", // Reference to Role schema (e.g., super_admin, employee)
       required: true,
     },
     organizationId: {
@@ -48,4 +52,5 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
 module.exports = mongoose.model("users", userSchema);

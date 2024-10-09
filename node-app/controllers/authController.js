@@ -1,71 +1,96 @@
 const Organization = require("../models/organizationSchema");
 const User = require("../models/user-model");
 const Role = require("../models/role");
-const handleFileUpload = require("../middleware/logoUpload");
-
+const upload = require("../middleware/fileUploads"); // Adjust the path
+const upload_URL = process.env.UPLOAD_URL || "http://localhost:8080/my-upload/";
 class AuthController {
-  // Sign-up logic for the first user (organization creator)
   static signUpAndCreateOrganization = async (req, res) => {
-    console.log("Received request:", req.body);
-    try {
-      const {
-        username,
-        email,
-        password,
-        phone,
-        orgName,
-        addressLine,
-        city,
-        state,
-        country,
-        zipCode,
-      } = req.body;
-
-      // Validate required fields
-      if (
-        !username ||
-        !email ||
-        !password ||
-        !phone ||
-        !orgName ||
-        !addressLine ||
-        !city ||
-        !state ||
-        !country ||
-        !zipCode
-      ) {
-        return res.status(400).json({ message: "Missing required fields" });
+    // Use upload.fields() to handle both file and form data
+    upload.fields([
+      { name: "logo", maxCount: 1 }, // File field
+      { name: "username" },
+      { name: "email" },
+      { name: "password" },
+      { name: "phone" },
+      { name: "orgName" },
+      { name: "addressLine" },
+      { name: "city" },
+      { name: "state" },
+      { name: "country" },
+      { name: "zipCode" },
+    ])(req, res, async (err) => {
+      if (err) {
+        console.error("Error during file upload:", err);
+        return res
+          .status(400)
+          .json({ message: "File upload error", error: err.message });
       }
 
-      // Check if user with the email already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
+      try {
+        // Log to see the content of req.body and req.files
+        console.log("Request body:", req.body);
+        console.log("Uploaded file:", req.files);
 
-      // Find or create the "super_admin" role
-      let role = await Role.findOne({ name: "super_admin" });
-      if (!role) {
-        role = new Role({ name: "super_admin" });
-        await role.save();
-      }
+        const {
+          username,
+          email,
+          password,
+          phone,
+          orgName,
+          addressLine,
+          city,
+          state,
+          country,
+          zipCode,
+        } = req.body;
 
-      // Create the user who is also the admin of the organization
-      const user = new User({
-        username,
-        email,
-        password,
-        phone,
-        roleId: role._id, // Assign super admin role
-      });
+        // Validate required fields
+        if (
+          !username ||
+          !email ||
+          !password ||
+          !phone ||
+          !orgName ||
+          !addressLine ||
+          !city ||
+          !state ||
+          !country ||
+          !zipCode
+        ) {
+          return res.status(400).json({ message: "All fields are required." });
+        }
 
-      const savedUser = await user.save();
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return res
+            .status(400)
+            .json({ message: "User with this email already exists." });
+        }
 
-      // Handle organization logo upload
-      handleFileUpload("logo")(req, res, async () => {
+        // Find or create the "super_admin" role
+        let role = await Role.findOne({ name: "super_admin" });
+        if (!role) {
+          role = new Role({ name: "super_admin" });
+          await role.save();
+        }
+
+        // Create the user (organization creator)
+        const user = new User({
+          username,
+          email,
+          password,
+          phone,
+          roleId: role._id, // Assign super admin role
+        });
+        const savedUser = await user.save();
+
+        // Create the organization with logo if uploaded
         const organization = new Organization({
           name: orgName,
-          logo: req.file ? `${upload_URL}${req.file.filename}` : undefined, // Logo URL if uploaded
+          logo: req.files.logo
+            ? `${upload_URL}${req.files.logo[0].filename}`
+            : undefined, // Logo URL if uploaded
           email,
           addressLine,
           phone,
@@ -73,7 +98,7 @@ class AuthController {
           state,
           country,
           zipCode,
-          superAdminId: savedUser._id, // Assign this user as the super admin of the org
+          superAdminId: savedUser._id, // Assign the created user as super admin
         });
 
         const savedOrganization = await organization.save();
@@ -82,17 +107,29 @@ class AuthController {
         savedUser.organizationId = savedOrganization._id;
         await savedUser.save();
 
-        res.status(201).json({
-          message: "User and Organization created successfully",
-          user: savedUser,
-          organization: savedOrganization,
+        return res.status(201).json({
+          message: "User and organization created successfully.",
+          user: {
+            id: savedUser._id,
+            username: savedUser.username,
+            email: savedUser.email,
+            role: role.name,
+          },
+          organization: {
+            id: savedOrganization._id,
+            name: savedOrganization.name,
+            logo: savedOrganization.logo,
+            email: savedOrganization.email,
+            superAdminId: savedUser._id,
+          },
         });
-      });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error in sign-up", error: error.message });
-    }
+      } catch (error) {
+        console.error("Error in sign-up process:", error);
+        return res
+          .status(500)
+          .json({ message: "Internal server error.", error: error.message });
+      }
+    });
   };
 }
 

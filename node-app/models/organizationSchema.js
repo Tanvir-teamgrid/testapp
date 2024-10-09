@@ -4,7 +4,6 @@ const organizationSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
     },
     logo: {
       type: String, // URL for the organization logo

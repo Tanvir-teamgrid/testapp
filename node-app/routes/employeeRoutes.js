@@ -11,7 +11,7 @@ router.post(
   employeeController.createEmployee
 );
 router.post(
-  "/employees/add",
+  "/employees/adds",
   authAndPermission("create"),
   employeeController.createEmployee
 );

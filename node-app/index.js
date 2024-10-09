@@ -25,7 +25,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("my-upload"));
+app.use("/my-upload", express.static(path.join(__dirname, "my-upload/images")));
 
 app.use("/job", jobRoute);
 app.use("/user", userRoute);

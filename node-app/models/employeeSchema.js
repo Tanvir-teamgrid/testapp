@@ -12,7 +12,6 @@ const employeeSchema = new mongoose.Schema(
       ref: "organizations",
       required: true,
     },
-
     department: {
       type: String,
       required: true,
@@ -38,6 +37,13 @@ const employeeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "users", // Reference to the user who created this employee (typically the admin or HR)
       required: true,
+    },
+    archived: { type: Boolean, default: false }, // New field
+    address: {
+      type: String, // Optional field to store employee address
+    },
+    phone: {
+      type: String, // Optional field for employee phone number
     },
   },
   { timestamps: true }
