@@ -1,6 +1,7 @@
 const Role = require("../models/role");
 const User = require("../models/user-model");
 const UserProfile = require("../models/userProfile");
+const Organization = require("../models/organizationSchema");
 const bcrypt = require("bcrypt");
 const userController = require("./user-controller"); // Import userController
 
@@ -18,6 +19,7 @@ class employeeController {
         dob,
         contactNumber,
         password,
+        organizationId
       } = req.body;
   
       if (!username || !email || !phone || !roleId || !firstName || !lastName) {
@@ -32,6 +34,11 @@ class employeeController {
       const role = await Role.findById(roleId);
       if (!role) {
         return res.status(400).json({ message: "Invalid role" });
+      }
+      const organization = await Organization.findById(organizationId);
+      if(!organization)
+      {
+        return res.status(404).json({message:"organization not found"});
       }
   
       // Set password to the provided value or default
@@ -56,6 +63,8 @@ class employeeController {
       });
   
       await newUserProfile.save();
+      organization.users.push(savedUser._id);
+      await organization.save();
   
       return res.status(201).json({
         message: "Employee created successfully",
