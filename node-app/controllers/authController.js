@@ -99,10 +99,10 @@ class authController {
         });
         try {
           const savedOrganization = await organization.save();
-          // user.organizationId = savedOrganization._id;
+          user.organizationId = savedOrganization._id;
           savedOrganization.users.push(user._id);
           await savedOrganization.save();
-          // await user.save();
+          await user.save();
           res.status(200).json({
             message: "organization setup successfully",
             organization: savedOrganization,
