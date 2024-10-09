@@ -99,8 +99,10 @@ class authController {
         });
         try {
           const savedOrganization = await organization.save();
-          user.organizationId = savedOrganization._id;
-          await user.save();
+          // user.organizationId = savedOrganization._id;
+          savedOrganization.users.push(user._id);
+          await savedOrganization.save();
+          // await user.save();
           res.status(200).json({
             message: "organization setup successfully",
             organization: savedOrganization,
@@ -141,6 +143,20 @@ class authController {
         .json({ message: "error updating organization", error: error.message });
     }
   };
+
+  static viewOrganization = async (req,res) => {
+    try {
+      const organizationId = req.params.id;
+      const data = await Organization.findById(organizationId).populate('users');
+      if (!data) {
+        return res.status(404).json({message:"organization not found"});
+      }
+      res.status(200).json({message:"organization retrive successfully"});
+    } catch (error) {
+      res.status(500).json({message:"error creating organization ",error:error.message});
+    }
+    
+  }
 }
 
 module.exports = authController;

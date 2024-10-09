@@ -1,4 +1,5 @@
 const User = require("../models/user-model");
+const bcrypt = require('bcryptjs');
 
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "jwt-token";
@@ -36,6 +37,67 @@ class UserController {
     }
   };
 
+  // static loginUser = async (req, res) => {
+  //   try {
+  //     const { email, password } = req.body;
+
+  //     // Validate email and password
+  //     if (!email || !password) {
+  //       return res.status(400).json({
+  //         error: "VALIDATION_ERROR",
+  //         message: "Email and password are required.",
+  //       });
+  //     }
+
+  //     // Find the user by email and populate roleId
+  //     const user = await User.findOne({ email }).populate("roleId");
+  //     if (!user) {
+  //       return res.status(404).json({
+  //         error: "USER_NOT_FOUND",
+  //         message:
+  //           "No account found with this email address. Please check your email or sign up.",
+  //       });
+  //     }
+
+  //     // Compare the provided password with the stored hash
+  //     const isMatch = await user.comparePassword(password);
+  //     if (!isMatch) {
+  //       return res.status(400).json({
+  //         error: "INVALID_PASSWORD",
+  //         message:
+  //           "Incorrect password. Please try again or reset your password.",
+  //       });
+  //     }
+
+  //     // Ensure roleId exists and fetch the role name
+  //     const roleName = user.roleId ? user.roleId.name : "Unknown"; // Fallback if roleId is not populated
+  //     console.log(roleName);
+
+  //     // Generate a JWT token
+  //     const token = jwt.sign(
+  //       {
+  //         id: user._id,
+  //         username: user.username,
+  //         email: user.email,
+  //         role: roleName, // Passing the role name
+  //       },
+  //       JWT_SECRET,
+  //       { expiresIn: "30d" } // Token expiration set to 1 month (30 days)
+  //     );
+
+  //     // Send a success response with the token
+  //     return res.status(200).json({ message: "Login successful", token });
+  //   } catch (error) {
+  //     // Log error for debugging in the server
+  //     console.error("Error during login:", error.message);
+
+  //     return res.status(500).json({
+  //       error: "SERVER_ERROR",
+  //       message: "An error occurred during login. Please try again later.",
+  //     });
+  //   }
+  // };
+
   static loginUser = async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -53,24 +115,33 @@ class UserController {
       if (!user) {
         return res.status(404).json({
           error: "USER_NOT_FOUND",
-          message:
-            "No account found with this email address. Please check your email or sign up.",
+          message: "No account found with this email address. Please check your email or sign up.",
         });
       }
 
+      // Debugging logs
+      console.log("Stored password hash:", user.password);
+      console.log("Input password:", password);
+
       // Compare the provided password with the stored hash
       const isMatch = await user.comparePassword(password);
+      console.log("Password match result:", isMatch);
+
+      // If the password does not match
       if (!isMatch) {
+        // Optionally, rehash the password if using a different bcrypt version or settings
+        const hashedPassword = await bcrypt.hash(password, 10);
+        console.log("Rehashed password for future use:", hashedPassword);
+
         return res.status(400).json({
           error: "INVALID_PASSWORD",
-          message:
-            "Incorrect password. Please try again or reset your password.",
+          message: "Incorrect password. Please try again or reset your password.",
         });
       }
 
       // Ensure roleId exists and fetch the role name
-      const roleName = user.roleId ? user.roleId.name : "Unknown"; // Fallback if roleId is not populated
-      console.log(roleName);
+      const roleName = user.roleId ? user.roleId.name : "Unknown";
+      console.log("User role:", roleName);
 
       // Generate a JWT token
       const token = jwt.sign(
@@ -78,25 +149,24 @@ class UserController {
           id: user._id,
           username: user.username,
           email: user.email,
-          role: roleName, // Passing the role name
+          role: roleName,
         },
-        JWT_SECRET,
-        { expiresIn: "30d" } // Token expiration set to 1 month (30 days)
+        process.env.JWT_SECRET,
+        { expiresIn: "30d" }
       );
 
       // Send a success response with the token
       return res.status(200).json({ message: "Login successful", token });
     } catch (error) {
-      // Log error for debugging in the server
       console.error("Error during login:", error.message);
-
       return res.status(500).json({
         error: "SERVER_ERROR",
         message: "An error occurred during login. Please try again later.",
       });
     }
   };
-
+  
+  
   static updateUser = async (req, res) => {
     try {
       const { username, email, password, roleId } = req.body;

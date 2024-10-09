@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const userController = require("./user-controller"); // Import userController
 
 class employeeController {
+ 
   static addEmployee = async (req, res) => {
     try {
       const {
@@ -18,49 +19,34 @@ class employeeController {
         contactNumber,
         password,
       } = req.body;
-      
-       if (
-        !username ||
-        !email ||
-        !phone ||
-        !roleId ||
-        !firstName ||
-        !lastName 
-        
-      ) {
+  
+      if (!username || !email || !phone || !roleId || !firstName || !lastName) {
         return res.status(400).json({ message: "Missing required fields" });
       }
-
-       
+  
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
-
-       
+  
       const role = await Role.findById(roleId);
       if (!role) {
         return res.status(400).json({ message: "Invalid role" });
       }
-
-      // If no password provided, assign a default password
-      const defaultPassword = password || "employee@123";
-
-      // Hash the default or provided password
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(defaultPassword, saltRounds);
-
-       
+  
+      // Set password to the provided value or default
+      const userPassword = password || "employee@123"; // default password if none provided
+  
       const newUser = new User({
         email,
         phone,
         username,
-        password: hashedPassword,
+        password: userPassword, // use userPassword here
         roleId,
       });
+  
       const savedUser = await newUser.save();
-
-       
+  
       const newUserProfile = new UserProfile({
         firstName,
         lastName,
@@ -68,21 +54,20 @@ class employeeController {
         contactNumber,
         userId: savedUser._id,
       });
+  
       await newUserProfile.save();
-
-      
+  
       return res.status(201).json({
         message: "Employee created successfully",
         user: savedUser,
         profile: newUserProfile,
       });
     } catch (error) {
-      return res
-        .status(500)
-        .json({ message: "Error adding employee", error: error.message });
+      return res.status(500).json({ message: "Error adding employee", error: error.message });
     }
   };
-
+  
+  
    
   static loginEmployee = async (req, res) => {
     return userController.loginUser(req, res);  

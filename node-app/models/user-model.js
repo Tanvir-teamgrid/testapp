@@ -16,17 +16,18 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+       
     },
     roleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "roles",
       required: true,
     },
-    organizationId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "organizations",
+    // organizationId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "organizations",
       
-    },
+    // },
     
     status: {
       type: String,
