@@ -89,7 +89,7 @@ class employeeController {
       if (!user) {
         return res.status(404).json({ message: "Employee not found" });
       }
-      const userProfile = await UserProfile.findOne({ userId: user._id });
+      const userProfile = await UserProfile.findOne({ userId: user._id }).populate("organizationId");
       res.status(200).json({ user, userProfile });
     } catch (error) {
       res
