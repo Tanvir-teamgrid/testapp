@@ -50,6 +50,7 @@ class employeeController {
         username,
         password: userPassword, // use userPassword here
         roleId,
+        organizationId,
       });
   
       const savedUser = await newUser.save();

@@ -16,6 +16,6 @@ router.delete(
 );
 
 router.get("/users", authMiddleware("viewall"), UserController.viewUsers);
-router.get("/users/:id", authMiddleware("viewall"), UserController.viewUserById);
+router.get("/users/:id",UserController.viewUserById);
 
 module.exports = router;
