@@ -1,6 +1,6 @@
 const Leave = require('../models/leaveSchema');  
 const User = require('../models/user-model');  
-class LeaveController {
+class leaveController {
    
   static  createLeaveRequest = async (req, res) => {
         const { employeeId, leaveTypeId, startDate, endDate, reason, supportingDocuments } = req.body;
@@ -50,7 +50,7 @@ static    approveLeaveRequest = async (req, res) => {
             console.error('Error approving leave request:', err);
             res.status(500).json({ error: 'Error approving leave request' });
         }
-    }
+    };
 
     
     static calculateLeaveDays(startDate, endDate) {
@@ -59,7 +59,24 @@ static    approveLeaveRequest = async (req, res) => {
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the end date
         return diffDays;
-    }
+    };
+    static viewLeave = async (req,res) => {
+        try {
+            const organizationId = req.user.organizationId;
+            const leaveRequest = await Leave.find().populate({
+                path:'employeeId',
+                select:'name organizationId',
+                match: {organizationId}
+            });
+            res.status(201).json({message:" leave request retrive successfully",info:leaveRequest});
+
+            
+        } catch (error) {
+            res.status(500).json({message:"error retireving data"})
+            
+        }
+        
+    };
 }
 
-module.exports = new LeaveController;
+module.exports = leaveController;

@@ -23,7 +23,7 @@ const authJwt = (requiredPermission) => {
       }
 
       // Set user information in the request for later use
-      req.user = { id: user._id, role: user.roleId }; // You can add more fields if needed
+      req.user = { id: user._id, role: user.roleId, user:user.organizationId }; // You can add more fields if needed
       next();
     } catch (err) {
       console.error("Error in authJwt middleware:", err);
