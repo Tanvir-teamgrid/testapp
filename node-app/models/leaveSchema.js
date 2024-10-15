@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
-const leaveSchema = new Schema({
-  employeeId: { type: Schema.Types.ObjectId, ref: "users", required: true },
+const leaveSchema =  mongoose.Schema({
+  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
   leaveTypeId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "leave_types",
     required: true,
   },
