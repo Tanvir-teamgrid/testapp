@@ -5,6 +5,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
 
+const leaveRoute = require("./routes/leaveRoutes");
 const jobRoute = require("./routes/job-route");
 const userRoute = require("./routes/user-route");
 const pageRoute = require("./routes/pageRoutes");
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("my-upload"));
 
+app.use("/leave",leaveRoute);
 app.use("/job", jobRoute);
 app.use("/user", userRoute);
 app.use("/page", pageRoute);
