@@ -110,7 +110,7 @@ class UserController {
         });
       }
 
-      // Find the user by email and populate roleId
+       
       const user = await User.findOne({ email }).populate("roleId");
       if (!user) {
         return res.status(404).json({
@@ -119,19 +119,16 @@ class UserController {
         });
       }
 
-      // Debugging logs
-      console.log("Stored password hash:", user.password);
-      console.log("Input password:", password);
-
+      
       // Compare the provided password with the stored hash
       const isMatch = await user.comparePassword(password);
-      console.log("Password match result:", isMatch);
+      
 
       // If the password does not match
       if (!isMatch) {
         // Optionally, rehash the password if using a different bcrypt version or settings
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log("Rehashed password for future use:", hashedPassword);
+        
 
         return res.status(400).json({
           error: "INVALID_PASSWORD",
@@ -141,7 +138,9 @@ class UserController {
 
       // Ensure roleId exists and fetch the role name
       const roleName = user.roleId ? user.roleId.name : "Unknown";
-      console.log("User role:", roleName);
+      
+
+     
 
       // Generate a JWT token
       const token = jwt.sign(
@@ -150,6 +149,7 @@ class UserController {
           username: user.username,
           email: user.email,
           role: roleName,
+          organizationId: user.organizationId,
         },
         process.env.JWT_SECRET,
         { expiresIn: "30d" }

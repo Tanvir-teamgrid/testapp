@@ -1,3 +1,4 @@
+const { default: mongoose } = require('mongoose');
 const Leave = require('../models/leaveSchema');  
 const User = require('../models/user-model');  
 class leaveController {
@@ -60,23 +61,38 @@ static    approveLeaveRequest = async (req, res) => {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the end date
         return diffDays;
     };
-    static viewLeave = async (req,res) => {
+    static viewLeave = async (req, res) => {
         try {
-            const organizationId = req.user.organizationId;
+           
+            const organizationId = req.user?.organizationId || req.body.organizationId;
+            
+            if (!organizationId) {
+                return res.status(404).json({ message: "Organization ID is missing" });
+            }
+    
+            // Convert organizationId to ObjectId for the query
+            const validOrganizationId = new mongoose.Types.ObjectId(organizationId);
+            
+            
             const leaveRequest = await Leave.find().populate({
-                path:'employeeId',
-                select:'name organizationId',
-                match: {organizationId}
+                path: 'employeeId',
+                select: 'name organizationId',
+                match: { organizationId: validOrganizationId }  
             });
-            res.status(201).json({message:" leave request retrive successfully",info:leaveRequest});
-
-            
+    
+             
+            return res.status(200).json({
+                message: "Leave requests retrieved successfully",
+                info: leaveRequest
+            });
+    
         } catch (error) {
-            res.status(500).json({message:"error retireving data"})
             
+            return res.status(500).json({ message: "Error retrieving data", error: error.message });
         }
-        
     };
+    
+    
 }
 
 module.exports = leaveController;
