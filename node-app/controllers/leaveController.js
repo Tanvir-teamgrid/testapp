@@ -30,7 +30,7 @@ static    approveLeaveRequest = async (req, res) => {
         const { managerComments } = req.body;
 
         try {
-            const leaveRequest = await Leave.findById(leaveId).populate('employeeId');
+            const leaveRequest = await Leave.findById(leaveId).populate('employeeId').populate('leaveTypeId');
 
             if (!leaveRequest) {
                 return res.status(404).json({ message: 'Leave request not found' });
@@ -42,9 +42,23 @@ static    approveLeaveRequest = async (req, res) => {
             await leaveRequest.save();
 
             
-            const user = leaveRequest.employeeId;  
-            user.allocatedLeaves -= this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate); // Update the leave balance
-            await user.save();
+            // const user = leaveRequest.employeeId;
+            const allocatedLeaves = leaveRequest.leaveTypeId.allocatedLeaves; 
+            if(allocatedLeaves == undefined || allocatedLeaves==null)
+                {
+                    return res.status(400).json({message:"allocated leaves is not defined for this leavve type"});
+
+                } 
+              const leaveDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate); // Update the leave balance
+              
+              if(leaveDays > allocatedLeaves)
+              {
+                return res.status(400).json({message:"  insufficient allocated  leaves "});
+              }
+              allocatedLeaves -= leaveDays;
+              leaveRequest.leaveTypeId.allocatedLeaves = allocatedLeaves;
+
+              await leaveRequest.leaveTypeId.save();
 
             res.status(200).json({ message: 'Leave request approved', leaveRequest });
         } catch (err) {
