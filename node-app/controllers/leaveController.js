@@ -53,6 +53,31 @@ static    approveLeaveRequest = async (req, res) => {
         }
     };
 
+    static rejectLeaveRequest = async (req,res) => {
+        try {
+            const {leaveId}=req.params;
+            const {managerComments} = req.body;
+            const leaveRequest = await Leave.findById(leaveId).populate('employeeId');
+
+            if (!leaveRequest) {
+                return res.status(404).json({ message: 'Leave request not found' });
+            }
+            
+            leaveRequest.status= 'rejected';
+            leaveRequest.managerComments = managerComments;
+            await leaveRequest.save();
+
+            res.status(200).json({ message: 'Leave request rejected', leaveRequest });
+
+            
+        } catch (error) {
+            console.error('Error approving leave request:', err);
+            res.status(500).json({ message: 'Error approving leave request', error:error.message});
+            
+        }
+        
+    };
+
     
     static calculateLeaveDays(startDate, endDate) {
         const start = new Date(startDate);
