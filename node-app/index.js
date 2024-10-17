@@ -17,6 +17,7 @@ const rolepermissionRoute = require("./routes/rolepermissionRoutes");
 const authRoute = require("./routes/authRoutes");
 const employeeRoute = require("./routes/employeeRoutes");
 const userProfileRoutes = require("./routes/profileRoute");
+const emailRoute = require('./routes/emailRoutes');
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -38,6 +39,7 @@ app.use("/role", roleRoute);
 app.use("/auth", authRoute);
 app.use("/employee", employeeRoute);
 app.use("/api", userProfileRoutes);
+app.use("/email",emailRoute);
 
 app.listen(PORT, () => {
   console.log(`server has started at port ${PORT}`);
