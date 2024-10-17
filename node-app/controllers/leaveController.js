@@ -30,7 +30,7 @@ static    approveLeaveRequest = async (req, res) => {
         const { managerComments } = req.body;
 
         try {
-            const leaveRequest = await Leave.findById(leaveId).populate('employeeId');
+            const leaveRequest = await Leave.findById(leaveId).populate('employeeId').populate('leaveTypeId');
 
             if (!leaveRequest) {
                 return res.status(404).json({ message: 'Leave request not found' });
@@ -42,15 +42,54 @@ static    approveLeaveRequest = async (req, res) => {
             await leaveRequest.save();
 
             
-            const user = leaveRequest.employeeId;  
-            user.allocatedLeaves -= this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate); // Update the leave balance
-            await user.save();
+            // const user = leaveRequest.employeeId;
+            const allocatedLeaves = leaveRequest.leaveTypeId.allocatedLeaves; 
+            if(allocatedLeaves == undefined || allocatedLeaves==null)
+                {
+                    return res.status(400).json({message:"allocated leaves is not defined for this leavve type"});
+
+                } 
+              const leaveDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate); // Update the leave balance
+              
+              if(leaveDays > allocatedLeaves)
+              {
+                return res.status(400).json({message:"  insufficient allocated  leaves "});
+              }
+              allocatedLeaves -= leaveDays;
+              leaveRequest.leaveTypeId.allocatedLeaves = allocatedLeaves;
+
+              await leaveRequest.leaveTypeId.save();
 
             res.status(200).json({ message: 'Leave request approved', leaveRequest });
         } catch (err) {
             console.error('Error approving leave request:', err);
             res.status(500).json({ error: 'Error approving leave request' });
         }
+    };
+
+    static rejectLeaveRequest = async (req,res) => {
+        try {
+            const {leaveId}=req.params;
+            const {managerComments} = req.body;
+            const leaveRequest = await Leave.findById(leaveId).populate('employeeId');
+
+            if (!leaveRequest) {
+                return res.status(404).json({ message: 'Leave request not found' });
+            }
+            
+            leaveRequest.status= 'rejected';
+            leaveRequest.managerComments = managerComments;
+            await leaveRequest.save();
+
+            res.status(200).json({ message: 'Leave request rejected', leaveRequest });
+
+            
+        } catch (error) {
+            console.error('Error approving leave request:', err);
+            res.status(500).json({ message: 'Error approving leave request', error:error.message});
+            
+        }
+        
     };
 
     

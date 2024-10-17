@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema(
       ref: "organizations",
       
     },
+    verificationToken: { type: String },
+    isVerified: { type: Boolean, default: false },
     
     status: {
       type: String,

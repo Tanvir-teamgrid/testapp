@@ -13,7 +13,7 @@ const leaveSchema =  mongoose.Schema({
     enum: ["pending", "approved", "rejected", "allocated", "cancelled"],
     default: "pending",
   },
-  allocatedLeaves: { type: Number },
+ 
  
   managerComments: { type: String },
   hrComments: { type: String },
