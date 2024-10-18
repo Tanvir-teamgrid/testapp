@@ -18,7 +18,8 @@ const rolepermissionRoute = require("./routes/rolepermissionRoutes");
 const authRoute = require("./routes/authRoutes");
 const employeeRoute = require("./routes/employeeRoutes");
 const userProfileRoutes = require("./routes/profileRoute");
-const emailRoute = require('./routes/emailRoutes');
+const documentRRoute = require("./routes/documentRRoutes");
+const documentSRoute = require("./routes/documentSRoute");
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -26,10 +27,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("my-upload"));
+app.use("/images", express.static(path.join(__dirname, "my-upload/images")));
 
-app.use("/leave",leaveRoute);
-app.use("/leaveType",levaeTypeRoute);
+app.use("/leave", leaveRoute);
 app.use("/job", jobRoute);
 app.use("/user", userRoute);
 app.use("/page", pageRoute);
@@ -42,6 +42,8 @@ app.use("/employee", employeeRoute);
 app.use("/api", userProfileRoutes);
 app.use("/email",emailRoute);
 app.use("/allocation",leaveAllocationRoute);
+app.use("/api", documentRRoute);
+app.use("/api", documentSRoute);
 
 app.listen(PORT, () => {
   console.log(`server has started at port ${PORT}`);
