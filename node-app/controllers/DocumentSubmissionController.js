@@ -3,11 +3,20 @@ const {
   DocumentRequest,
 } = require("../models/documentSchema");
 
+const path = require("path");
+const BASE_URL = process.env.BASE_URL;
+const upload_URL = `${BASE_URL}images/`;
+
 class DocumentSubmissionController {
   // Submit a document for a request
   static async submitDocument(req, res) {
     try {
       const { documentRequestId } = req.body;
+
+      // Check if user is authenticated
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
       // Check if file is uploaded
       if (!req.file) {
@@ -21,15 +30,28 @@ class DocumentSubmissionController {
       }
 
       // Check if the employee submitting the document matches the requested employee
-      if (req.user._id.toString() !== documentRequest.employee.toString()) {
-        return res.status(403).json({ message: "Unauthorized submission" });
+      if (!documentRequest.employee) {
+        return res.status(400).json({
+          message: "Document request does not have an employee assigned.",
+        });
       }
+
+      if (req.user.id.toString() !== documentRequest.employee.toString()) {
+        return res.status(403).json({
+          message:
+            "Unauthorized submission. Only the assigned employee can submit this document.",
+        });
+      }
+
+      const upload_URL = `${process.env.BASE_URL}images/${path.basename(
+        req.file.path
+      )}`;
 
       // Create new document submission
       const newSubmission = new DocumentSubmission({
         documentRequestId,
-        submittedBy: req.user._id, // Employee submitting the document
-        filePath: req.file.path, // Multer handles file upload
+        submittedBy: req.user.id, // Employee submitting the document
+        filePath: upload_URL, // Multer handles file upload
         status: "pending", // Default status is pending until reviewed
       });
 
@@ -68,11 +90,9 @@ class DocumentSubmissionController {
 
       // Validate status
       if (!["approved", "rejected"].includes(status)) {
-        return res
-          .status(400)
-          .json({
-            message: "Invalid status. Must be 'approved' or 'rejected'.",
-          });
+        return res.status(400).json({
+          message: "Invalid status. Must be 'approved' or 'rejected'.",
+        });
       }
 
       // Find the submission
