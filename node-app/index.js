@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 
 const leaveRoute = require("./routes/leaveRoutes");
+const emailRoute = require("./routes/emailRoutes");
 const levaeTypeRoute = require("./routes/leaveTypeRoutes");
 const leaveAllocationRoute = require('./routes/leaveAllocationRoutes');
 const jobRoute = require("./routes/job-route");
