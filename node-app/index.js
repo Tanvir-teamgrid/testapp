@@ -43,6 +43,7 @@ app.use("/employee", employeeRoute);
 app.use("/api", userProfileRoutes);
 app.use("/email",emailRoute);
 app.use("/allocation",leaveAllocationRoute);
+app.use("/leaveType",levaeTypeRoute);
 app.use("/api", documentRRoute);
 app.use("/api", documentSRoute);
 
