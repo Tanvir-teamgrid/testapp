@@ -1,6 +1,7 @@
 const { default: mongoose } = require('mongoose');
 const Leave = require('../models/leaveSchema');  
-const User = require('../models/user-model');  
+const User = require('../models/user-model'); 
+const EmployeeLeaveAllocation = require('../models/employeeLeaveAllocation');
 class leaveController {
    
   static  createLeaveRequest = async (req, res) => {
@@ -25,47 +26,96 @@ class leaveController {
     }
 
      
-static    approveLeaveRequest = async (req, res) => {
-        const { leaveId } = req.params;  
+// static    approveLeaveRequest = async (req, res) => {
+//         const { leaveId } = req.params;  
+//         const { managerComments } = req.body;
+
+//         try {
+//             const leaveRequest = await Leave.findById(leaveId).populate('employeeId').populate('leaveTypeId');
+
+//             if (!leaveRequest) {
+//                 return res.status(404).json({ message: 'Leave request not found' });
+//             }
+
+            
+//             leaveRequest.status = 'approved';
+//             leaveRequest.managerComments = managerComments;
+//             await leaveRequest.save();
+
+            
+//             // const user = leaveRequest.employeeId;
+//             const allocatedLeaves = leaveRequest.leaveTypeId.allocatedLeaves; 
+//             if(allocatedLeaves == undefined || allocatedLeaves==null)
+//                 {
+//                     return res.status(400).json({message:"allocated leaves is not defined for this leavve type"});
+
+//                 } 
+//               const leaveDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate); // Update the leave balance
+              
+//               if(leaveDays > allocatedLeaves)
+//               {
+//                 return res.status(400).json({message:"  insufficient allocated  leaves "});
+//               }
+//               allocatedLeaves -= leaveDays;
+//               leaveRequest.leaveTypeId.allocatedLeaves = allocatedLeaves;
+
+//               await leaveRequest.leaveTypeId.save();
+
+//             res.status(200).json({ message: 'Leave request approved', leaveRequest });
+//         } catch (err) {
+//             console.error('Error approving leave request:', err);
+//             res.status(500).json({ error: 'Error approving leave request' });
+//         }
+//     };
+
+    static approveLeaveRequest = async (req, res) => {
+        const { leaveId } = req.params;
         const { managerComments } = req.body;
-
+    
         try {
+            // Find the leave request
             const leaveRequest = await Leave.findById(leaveId).populate('employeeId').populate('leaveTypeId');
-
             if (!leaveRequest) {
                 return res.status(404).json({ message: 'Leave request not found' });
             }
-
-            
+    
+            // Approve the leave request and update manager comments
             leaveRequest.status = 'approved';
             leaveRequest.managerComments = managerComments;
+    
+            // Calculate the number of leave days
+            const leaveDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate);
+    
+            // Fetch the employee's specific leave allocation
+            const employeeLeaveAllocation = await EmployeeLeaveAllocation.findOne({
+                employeeId: leaveRequest.employeeId._id,
+                leaveTypeId: leaveRequest.leaveTypeId._id,
+            });
+    
+            if (!employeeLeaveAllocation) {
+                return res.status(400).json({ message: 'No leave allocation found for this employee' });
+            }
+    
+            // Check if the employee has enough allocated leaves
+            const remainingLeaves = employeeLeaveAllocation.allocatedLeaves - employeeLeaveAllocation.usedLeaves;
+            if (leaveDays > remainingLeaves) {
+                return res.status(400).json({ message: 'Insufficient allocated leaves' });
+            }
+    
+            // Update the used leaves for the employee
+            employeeLeaveAllocation.usedLeaves += leaveDays;
+    
+            // Save the updated leave request and employee leave allocation
             await leaveRequest.save();
-
-            
-            // const user = leaveRequest.employeeId;
-            const allocatedLeaves = leaveRequest.leaveTypeId.allocatedLeaves; 
-            if(allocatedLeaves == undefined || allocatedLeaves==null)
-                {
-                    return res.status(400).json({message:"allocated leaves is not defined for this leavve type"});
-
-                } 
-              const leaveDays = this.calculateLeaveDays(leaveRequest.startDate, leaveRequest.endDate); // Update the leave balance
-              
-              if(leaveDays > allocatedLeaves)
-              {
-                return res.status(400).json({message:"  insufficient allocated  leaves "});
-              }
-              allocatedLeaves -= leaveDays;
-              leaveRequest.leaveTypeId.allocatedLeaves = allocatedLeaves;
-
-              await leaveRequest.leaveTypeId.save();
-
+            await employeeLeaveAllocation.save();
+    
             res.status(200).json({ message: 'Leave request approved', leaveRequest });
         } catch (err) {
             console.error('Error approving leave request:', err);
             res.status(500).json({ error: 'Error approving leave request' });
         }
     };
+    
 
     static rejectLeaveRequest = async (req,res) => {
         try {

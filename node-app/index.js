@@ -7,6 +7,7 @@ const path = require("path");
 
 const leaveRoute = require("./routes/leaveRoutes");
 const levaeTypeRoute = require("./routes/leaveTypeRoutes");
+const leaveAllocationRoute = require('./routes/leaveAllocationRoutes');
 const jobRoute = require("./routes/job-route");
 const userRoute = require("./routes/user-route");
 const pageRoute = require("./routes/pageRoutes");
@@ -40,6 +41,7 @@ app.use("/auth", authRoute);
 app.use("/employee", employeeRoute);
 app.use("/api", userProfileRoutes);
 app.use("/email",emailRoute);
+app.use("/allocation",leaveAllocationRoute);
 
 app.listen(PORT, () => {
   console.log(`server has started at port ${PORT}`);
