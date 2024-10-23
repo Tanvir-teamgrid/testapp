@@ -9,7 +9,7 @@ const upload = require("../middleware/fileUploads");
 router.post(
   "/create",
   authJwt(), // User must be logged in
-  checkRole(["hr", "super_admin"]), // Only HR or Admin can create document requests
+  checkRole(["hr", "super_admin", "admin"]), // Only HR or Admin can create document requests
   DocumentRequestController.createDocumentRequest
 );
 

@@ -3,17 +3,17 @@ const Schema = mongoose.Schema;
 
 // Document Request Schema (created by HR or Manager)
 const DocumentRequestSchema = new Schema({
-  title: { type: String, required: true }, // Title of the document request (e.g., ID Proof)
-  description: { type: String, required: true }, // Detailed description of the request
-  requestedBy: { type: Schema.Types.ObjectId, ref: "users" }, // HR/Admin who requested the document
-  employee: { type: Schema.Types.ObjectId, ref: "users", required: true }, // Employee expected to submit the document
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  requestedBy: { type: Schema.Types.ObjectId, ref: "users" }, // Admin/HR user
+  employees: [{ type: Schema.Types.ObjectId, ref: "users", required: true }], // Multiple employees
   format: { type: String, required: true },
   maxSize: { type: Number, required: true },
-  dueDate: { type: Date, required: true }, // Deadline for submitting the document
+  dueDate: { type: Date, required: true },
   status: {
     type: String,
     enum: ["pending", "submitted", "approved", "rejected"],
-    default: "pending", // Status of the request
+    default: "pending",
   },
   createdAt: { type: Date, default: Date.now },
 });
@@ -25,7 +25,7 @@ const DocumentSubmissionSchema = new Schema({
     ref: "DocumentRequest",
     required: true,
   }, // The associated document request
-  submittedBy: { type: Schema.Types.ObjectId, ref: "uers", required: true }, // Employee who submits the document
+  submittedBy: { type: Schema.Types.ObjectId, ref: "users", required: true }, // Employee who submits the document
   filePath: { type: String, required: true }, // Path to the uploaded document file
   status: {
     type: String,

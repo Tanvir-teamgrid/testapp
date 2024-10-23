@@ -11,23 +11,59 @@ class DocumentRequestController {
   // Create a new document request
   static async createDocumentRequest(req, res) {
     try {
-      const { title, description, employee, format, maxSize, dueDate } =
+      const { title, description, employees, format, maxSize, dueDate } =
         req.body;
 
-      const newRequest = new DocumentRequest({
+      // Validate if 'employees' is a non-empty array
+      if (!Array.isArray(employees) || employees.length === 0) {
+        return res.status(400).json({
+          message:
+            "Invalid input. 'employees' must be a non-empty array of employee IDs.",
+        });
+      }
+
+      let documentRequest = await DocumentRequest.findOne({
+        title,
+        format, // Consider both title and format as the key for uniqueness
+      });
+
+      // If the document request already exists, add new employees to it
+      if (documentRequest) {
+        // Add only the employees that are not already included in the request
+        const newEmployees = employees.filter(
+          (empId) => !documentRequest.employees.includes(empId)
+        );
+
+        if (newEmployees.length > 0) {
+          documentRequest.employees.push(...newEmployees);
+          await documentRequest.save();
+        }
+
+        return res.status(200).json({
+          message: "Document request updated with new employees",
+          request: documentRequest,
+          skippedEmployees: employees.filter((empId) =>
+            documentRequest.employees.includes(empId)
+          ), // Show the employees that were already in the request
+        });
+      }
+
+      // If no existing request, create a new one
+      documentRequest = new DocumentRequest({
         title,
         description,
-        requestedBy: req.user._id, // assuming JWT middleware adds req.user (HR/Admin)
-        employee,
+        requestedBy: req.user.id, // assuming JWT middleware adds req.user (HR/Admin)
+        employees, // Add all employees since it's a new request
         format,
         maxSize,
         dueDate,
       });
 
-      await newRequest.save();
+      const savedRequest = await documentRequest.save();
+
       return res.status(201).json({
         message: "Document request created successfully",
-        request: newRequest,
+        request: savedRequest,
       });
     } catch (err) {
       return res
@@ -165,7 +201,7 @@ class DocumentRequestController {
           status,
           feedback,
           reviewedAt: Date.now(),
-          reviewedBy: req.user._id, // assuming HR/Admin is authenticated
+          reviewedBy: req.user.id, // assuming HR/Admin is authenticated
         },
         { new: true }
       );
@@ -189,7 +225,7 @@ class DocumentRequestController {
   static async getAllDocumentRequests(req, res) {
     try {
       const requests = await DocumentRequest.find({
-        requestedBy: req.user._id, // assuming HR/Admin is authenticated
+        requestedBy: req.user.id, // assuming HR/Admin is authenticated
       }).populate("employee");
 
       return res.status(200).json(requests);

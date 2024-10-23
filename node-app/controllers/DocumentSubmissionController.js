@@ -30,7 +30,7 @@ class DocumentSubmissionController {
       }
 
       // Check if the employee submitting the document matches the requested employee
-      if (!documentRequest.employee) {
+      if (!documentRequest.employees) {
         return res.status(400).json({
           message: "Document request does not have an employee assigned.",
         });
@@ -71,11 +71,32 @@ class DocumentSubmissionController {
   // Employee views their own document submissions
   static async getEmployeeSubmissions(req, res) {
     try {
+      // Fetch submissions by the employee, including details of the document request
       const submissions = await DocumentSubmission.find({
-        submittedBy: req.user._id, // Employee ID from the JWT token
-      }).populate("documentRequestId");
+        submittedBy: req.user.id, // Employee ID from the JWT token
+      }).populate("documentRequestId"); // Populates document request details
 
-      return res.status(200).json(submissions);
+      // Iterate over submissions to adjust status if needed (e.g., pending, approved, rejected)
+      const updatedSubmissions = submissions.map((submission) => {
+        // Check the current status of the submission
+        let currentStatus = submission.status;
+
+        // If not yet reviewed, status will remain "pending"
+        if (submission.status === "pending") {
+          currentStatus = "pending"; // Default status until reviewed
+        } else if (submission.status === "approved") {
+          currentStatus = "approved"; // Approved status
+        } else if (submission.status === "rejected") {
+          currentStatus = "rejected"; // Rejected status
+        }
+
+        return {
+          ...submission._doc, // Spread submission details
+          status: currentStatus, // Dynamic status based on current value
+        };
+      });
+
+      return res.status(200).json(updatedSubmissions); // Return updated submissions with dynamic status
     } catch (err) {
       return res
         .status(500)

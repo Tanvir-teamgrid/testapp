@@ -24,7 +24,7 @@ router.get(
 router.post(
   "/review",
   authJwt(), // Ensure user is authenticated
-  checkRole(["hr", "admin"]), // Only HR/Admin can review document submissions
+  checkRole(["hr", "admin", "super_admin"]), // Only HR/Admin can review document submissions
   DocumentSubmissionController.reviewDocument
 );
 
