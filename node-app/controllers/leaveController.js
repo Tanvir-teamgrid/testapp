@@ -180,6 +180,35 @@ class leaveController {
             return res.status(500).json({ message: "Error retrieving data", error: error.message });
         }
     };
+
+    static viewLeaveById = async (req,res) => {
+        try {
+            const userId = req.user._id;
+            const organizationId = req.user?.organizationId || req.user.body;
+
+            if(!organizationId)
+            {
+                return res.status(404).json({message:" organization Id is missing"});
+            }
+            const validOrganizationId = new mongoose.Types.ObjectId(organizationId);
+
+            const leaveRequest = await Leave.findById(userId).populate({
+                path: 'employeeId',
+                select: 'name organizationId',
+                match: {organizationId : validOrganizationId},
+            });
+            return res.status(200).json({
+                message: "Leave requests retrieved successfully",
+                info: leaveRequest
+            });
+
+            
+        } catch (error) {
+            res.status(500).json({message:"error retrieving leaves",error:error.message});
+            
+        }
+        
+    }
     
     
 }
