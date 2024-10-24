@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
-const leaveSchema =  mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
-  leaveTypeId: {
+const leaveSchema = mongoose.Schema({
+  employee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+    required: true,
+  },
+  leaveType: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "leave_types",
     required: true,
@@ -13,8 +17,7 @@ const leaveSchema =  mongoose.Schema({
     enum: ["pending", "approved", "rejected", "allocated", "cancelled"],
     default: "pending",
   },
- 
- 
+
   managerComments: { type: String },
   hrComments: { type: String },
   reason: { type: String },
