@@ -12,6 +12,6 @@ router.get(
   LeaveController.viewLeave
 );
 router.put("/leaves/:leaveId/reject", LeaveController.rejectLeaveRequest);
-router.get("/leaves/:id", LeaveController.getLeaveRequest);
+router.get("/leave/view", LeaveController.viewLeaveById);
 
 module.exports = router;

@@ -5,8 +5,8 @@ const EmployeeLeaveAllocation = require("../models/employeeLeaveAllocation");
 class leaveController {
   static createLeaveRequest = async (req, res) => {
     const {
-      employee,
-      leaveType,
+      employeeId,
+      leaveTypeId,
       startDate,
       endDate,
       reason,
@@ -15,8 +15,8 @@ class leaveController {
 
     try {
       const leaveRequest = new Leave({
-        employee,
-        leaveType,
+        employeeId,
+        leaveTypeId,
         startDate,
         endDate,
         reason,
@@ -78,34 +78,28 @@ class leaveController {
     const { managerComments } = req.body;
 
     try {
+      // Find the leave request
       const leaveRequest = await Leave.findById(leaveId)
-        .populate("employee")
-        .populate("leaveType");
-
+        .populate("employeeId")
+        .populate("leaveTypeId");
       if (!leaveRequest) {
         return res.status(404).json({ message: "Leave request not found" });
       }
 
-      console.log("Leave Request:", leaveRequest);
-
-      if (!leaveRequest.employee || !leaveRequest.leaveType) {
-        return res.status(400).json({
-          message: "Employee or leave type data is missing for this request",
-          leaveId,
-        });
-      }
-
+      // Approve the leave request and update manager comments
       leaveRequest.status = "approved";
       leaveRequest.managerComments = managerComments;
 
-      const leaveDays = leaveController.calculateLeaveDays(
+      // Calculate the number of leave days
+      const leaveDays = this.calculateLeaveDays(
         leaveRequest.startDate,
         leaveRequest.endDate
       );
 
+      // Fetch the employee's specific leave allocation
       const employeeLeaveAllocation = await EmployeeLeaveAllocation.findOne({
-        employeeId: leaveRequest.employee._id,
-        leaveTypeId: leaveRequest.leaveType._id,
+        employeeId: leaveRequest.employeeId._id,
+        leaveTypeId: leaveRequest.leaveTypeId._id,
       });
 
       if (!employeeLeaveAllocation) {
@@ -114,6 +108,7 @@ class leaveController {
           .json({ message: "No leave allocation found for this employee" });
       }
 
+      // Check if the employee has enough allocated leaves
       const remainingLeaves =
         employeeLeaveAllocation.allocatedLeaves -
         employeeLeaveAllocation.usedLeaves;
@@ -123,24 +118,19 @@ class leaveController {
           .json({ message: "Insufficient allocated leaves" });
       }
 
+      // Update the used leaves for the employee
       employeeLeaveAllocation.usedLeaves += leaveDays;
 
+      // Save the updated leave request and employee leave allocation
       await leaveRequest.save();
       await employeeLeaveAllocation.save();
 
-      res
-        .status(200)
-        .json({ message: "Leave request approved successfully", leaveRequest });
-    } catch (error) {
-      console.error("Error approving leave request:", error);
-      res.status(500).json({
-        message: "Error approving leave request",
-        error: error.message,
-      });
+      res.status(200).json({ message: "Leave request approved", leaveRequest });
+    } catch (err) {
+      console.error("Error approving leave request:", err);
+      res.status(500).json({ error: "Error approving leave request" });
     }
   };
-
-  // Helper function to calculate leave days
 
   static rejectLeaveRequest = async (req, res) => {
     try {
@@ -159,10 +149,12 @@ class leaveController {
       res.status(200).json({ message: "Leave request rejected", leaveRequest });
     } catch (error) {
       console.error("Error approving leave request:", err);
-      res.status(500).json({
-        message: "Error approving leave request",
-        error: error.message,
-      });
+      res
+        .status(500)
+        .json({
+          message: "Error approving leave request",
+          error: error.message,
+        });
     }
   };
 
@@ -173,7 +165,6 @@ class leaveController {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the end date
     return diffDays;
   }
-
   static viewLeave = async (req, res) => {
     try {
       const organizationId =
@@ -203,27 +194,29 @@ class leaveController {
     }
   };
 
-  static getLeaveRequest = async (req, res) => {
-    let id = req.params.id;
+  static viewLeaveById = async (req, res) => {
     try {
-      // Find the leave request by ID and populate related fields
-      const leaveRequest = await Leave.findById(id)
-        .populate("employee")
-        .populate("leaveType");
+      const userId = req.user._id;
+      const organizationId = req.user?.organizationId || req.user.body;
 
-      // Check if the leave request was found
-      if (!leaveRequest) {
-        return res.status(404).json({ message: "Leave request not found" });
+      if (!organizationId) {
+        return res.status(404).json({ message: " organization Id is missing" });
       }
+      const validOrganizationId = new mongoose.Types.ObjectId(organizationId);
 
-      // Return the leave request details
-      res.status(200).json({ leaveRequest });
-    } catch (error) {
-      console.error("Error retrieving leave request:", error);
-      res.status(500).json({
-        message: "Error retrieving leave request",
-        error: error.message,
+      const leaveRequest = await Leave.findById(userId).populate({
+        path: "employeeId",
+        select: "name organizationId",
+        match: { organizationId: validOrganizationId },
       });
+      return res.status(200).json({
+        message: "Leave requests retrieved successfully",
+        info: leaveRequest,
+      });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "error retrieving leaves", error: error.message });
     }
   };
 }
