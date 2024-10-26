@@ -18,6 +18,9 @@ const DocumentRequestSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Adding a unique compound index on 'title' and 'format'
+DocumentRequestSchema.index({ title: 1, format: 1 }, { unique: true });
+
 // Document Submission Schema
 const DocumentSubmissionSchema = new Schema({
   documentRequestId: {

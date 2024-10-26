@@ -9,6 +9,7 @@ const upload_URL = `${BASE_URL}images/`;
 
 class DocumentRequestController {
   // Create a new document request
+
   static async createDocumentRequest(req, res) {
     try {
       const { title, description, employees, format, maxSize, dueDate } =
@@ -22,19 +23,18 @@ class DocumentRequestController {
         });
       }
 
-      let documentRequest = await DocumentRequest.findOne({
-        title,
-        format, // Consider both title and format as the key for uniqueness
-      });
+      // Check if a document request with the same title and format already exists
+      let documentRequest = await DocumentRequest.findOne({ title, format });
 
-      // If the document request already exists, add new employees to it
+      // If a matching document request exists, only add new employees
       if (documentRequest) {
-        // Add only the employees that are not already included in the request
+        // Filter out employees who are already in the document request
         const newEmployees = employees.filter(
           (empId) => !documentRequest.employees.includes(empId)
         );
 
         if (newEmployees.length > 0) {
+          // Append only the new employees and save the updated document request
           documentRequest.employees.push(...newEmployees);
           await documentRequest.save();
         }
@@ -44,11 +44,11 @@ class DocumentRequestController {
           request: documentRequest,
           skippedEmployees: employees.filter((empId) =>
             documentRequest.employees.includes(empId)
-          ), // Show the employees that were already in the request
+          ), // List of employees who were already in the request
         });
       }
 
-      // If no existing request, create a new one
+      // If no existing request, create a new document request
       documentRequest = new DocumentRequest({
         title,
         description,
@@ -75,10 +75,15 @@ class DocumentRequestController {
   // Get all document requests for an employee (for the employee to see their requests)
   static async getEmployeeDocumentRequests(req, res) {
     try {
+      // Retrieve document requests where the employee's ID is in the 'employees' array
       const requests = await DocumentRequest.find({
-        employee: req.user.id, // assuming employee is authenticated
-      }).populate("requestedBy");
-      return res.status(200).json(requests);
+        employees: req.user.id,
+      }).populate("requestedBy", "name email");
+
+      return res.status(200).json({
+        message: "Document requests retrieved successfully",
+        requests,
+      });
     } catch (err) {
       return res
         .status(500)
@@ -226,7 +231,7 @@ class DocumentRequestController {
     try {
       const requests = await DocumentRequest.find({
         requestedBy: req.user.id, // assuming HR/Admin is authenticated
-      }).populate("employee");
+      }).populate("employees");
 
       return res.status(200).json(requests);
     } catch (err) {
