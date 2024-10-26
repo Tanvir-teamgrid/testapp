@@ -149,12 +149,10 @@ class leaveController {
       res.status(200).json({ message: "Leave request rejected", leaveRequest });
     } catch (error) {
       console.error("Error approving leave request:", err);
-      res
-        .status(500)
-        .json({
-          message: "Error approving leave request",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Error approving leave request",
+        error: error.message,
+      });
     }
   };
 
